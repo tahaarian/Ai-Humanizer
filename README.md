@@ -2,15 +2,15 @@
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-backend-009688) ![Next.js](https://img.shields.io/badge/Next.js-frontend-black) ![LLM](https://img.shields.io/badge/LLM-Ollama-orange)
 
-ابزار ویرایش و روان‌سازی متن انگلیسی (مقاله‌های علمی) با حفظ دقیق معنا، اعداد، ارجاعات و اصطلاحات تخصصی.
-این ابزار برای ویرایش و بهبود خوانایی است و **هیچ تضمینی برای عبور از آشکارسازها نمی‌دهد**.
+An editing and readability tool for English text (especially scientific articles) that preserves meaning, numbers, citations and technical terms.
+It is meant for editing and clarity and **makes no guarantee about AI-detector results**.
 
-## فهرست
+## Contents
 - [Overview](#overview) · [Architecture](#architecture) · [Repo Structure](#repo-structure) · [Getting Started](#getting-started) · [Configuration](#configuration) · [Pipeline](#pipeline) · [Usage](#usage) · [Known Issues](#known-issues) · [Roadmap](#roadmap) · [Contributing](#contributing) · [License](#license)
 
 ## Overview
-متن یا فایل → تقسیم به پاراگراف و گروه‌های ۳ جمله‌ای → بازنویسی با LLM محلی → اعتبارسنجی وفاداری → انتخاب بهترین از ۳ کاندیدا → خروجی.
-ویژگی‌ها: سبک‌ها (academic / practical / light / casual)، نمونهٔ نوشتار برای تقلید لحن، تشخیص الگوهای نوشتار ماشینی با توضیح، صف کار، سهمیه، ورود با گوگل، پاک‌سازی حریم خصوصی.
+Text or file → split into paragraphs and 3-sentence groups → rewrite with a local LLM → fidelity validation → best of 3 candidates → output.
+Features: styles (academic / practical / light / casual), writing-sample style matching, explained detection of machine-like writing patterns, job queue, quotas, Google sign-in, privacy cleanup.
 
 ## Architecture
 ```mermaid
@@ -47,36 +47,41 @@ copy .env.example .env
 ollama pull qwen2.5:14b-instruct
 uvicorn app.main:app --port 8000
 ```
-در ترمینال دوم:
+In a second terminal:
 ```
 cd frontend
 npm install
 npm run dev
 ```
-سپس `http://localhost:3000` (با `DEV_LOGIN=true` آدرس `/auth/dev-login`).
+Then open `http://localhost:3000` (with `DEV_LOGIN=true`, use `/auth/dev-login`).
 
 ## Configuration
 `SECRET_KEY, PUBLIC_URL, DATABASE_URL, GOOGLE_CLIENT_ID/SECRET, DEV_LOGIN, ADMIN_EMAILS, ALLOWED_EMAIL_DOMAINS, LLM_URL, LLM_API_KEY, LLM_MODEL, LLM_TIMEOUT, MAX_PASSES, CANDIDATES, TARGET_SCORE, MAX_WORDS_PER_JOB, DAILY_WORD_LIMIT, WORKER_CONCURRENCY, RESULT_RETENTION_HOURS`
-- روی CPU مدل ۷B سریع‌تر و ۱۴B با کیفیت‌تر است. برای GPU کولب فقط `LLM_URL` را عوض کنید.
+- On CPU, the 7B model is faster and the 14B model gives better quality. For a Colab GPU, only change `LLM_URL`.
 
 ## Pipeline
-۱) محافظت از اعداد/ارجاع/اختصارها ۲) بازنویسی گروه ۳ جمله‌ای ۳) اعتبارسنجی (توکن‌ها، کلیدواژه‌ها، hedgeها، جملهٔ ساختگی) ۴) بازخورد دلیل رد به تلاش بعدی ۵) انتخاب بهترین کاندیدا ۶) fallback جمله‌به‌جمله؛ فقط جملات ردشده اصلی می‌مانند.
+1. Protect numbers, citations and acronyms.
+2. Rewrite each 3-sentence group.
+3. Validate (tokens, keywords, hedges, no invented sentences).
+4. Feed rejection reasons into the next attempt.
+5. Pick the best candidate.
+6. Sentence-by-sentence fallback; only rejected sentences keep the original.
 
 ## Usage
-ورود → چسباندن متن (حداقل ۳۰ کلمه) یا آپلود فایل → انتخاب سبک (برای متن علمی: Light) → پیگیری پیشرفت → مشاهدهٔ نتیجه و الگوهای یافت‌شده.
+Sign in → paste text (min. 30 words) or upload a file → choose a style (Light for scientific text) → follow progress → view the result and detected patterns.
 
 ## Known Issues
-- روی CPU پردازش کند است (مقالهٔ بلند = چند ساعت).
-- امتیاز تحلیلگر سیگنال داخلی است، نه معیار آشکارسازها.
-- هنوز diff view ندارد.
+- Slow on CPU (a long article can take hours).
+- The analyzer score is an internal style signal, not a detector metric.
+- No diff view yet.
 
 ## Roadmap
-- [x] صف کار، سهمیه، الگوهای ماشینی، اعتبارسنجی
-- [x] بازنویسی گروهی + best-of-N + fallback جزئی
-- [ ] Diff view · راهنمای Colab · Postgres · پرداخت
+- [x] Job queue, quotas, pattern detection, validation
+- [x] Group rewriting + best-of-N + partial fallback
+- [ ] Diff view · Colab guide · Postgres · payments
 
 ## Contributing
-Commitهای کوچک، هر مرحله جدا؛ قبل از PR اجرای `python -m pytest -q`.
+Small commits, one phase at a time; run `python -m pytest -q` before opening a PR.
 
 ## License
 MIT
