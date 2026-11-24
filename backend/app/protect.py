@@ -4,6 +4,7 @@ PATTERNS = [
  r"https?://\S+",
  r"\[[0-9,\s\-–]+\]",                                   # [1], [2-4]
  r"\((?:[A-Z][A-Za-z\-]+(?: et al\.)?(?:,| and| &)?[^()]{0,40}\d{4}[a-z]?)\)",  # (Smith et al., 2020)
+ r"\b[A-Z][A-Za-z]*[A-Z]\b",                           # acronyms (AUC, mRNA)
  r"\$[^$]+\$",                                          # inline latex
  r"\b\d+(?:[.,]\d+)?\s?(?:%|[A-Za-zµ°]{1,4}\b)?",       # numbers+units
 ]

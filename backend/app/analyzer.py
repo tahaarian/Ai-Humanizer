@@ -1,6 +1,7 @@
 """Heuristic stylometric analyzer: estimates how 'AI-like' a text reads and explains why.
 It is a quality/style signal, NOT a guarantee about any external detector."""
 import re, statistics
+from . import patterns
 
 AI_PHRASES = [
  "delve", "tapestry", "moreover", "furthermore", "in conclusion", "it is important to note",
@@ -16,7 +17,7 @@ WORD_RE = re.compile(r"[A-Za-z']+")
 def sentences(text):
     return [s.strip() for s in SENT_RE.split(text.strip()) if s.strip()]
 
-def analyze(text: str) -> dict:
+def analyze(text: str, formal: bool = True) -> dict:
     sents = sentences(text)
     words = WORD_RE.findall(text.lower())
     if len(words) < 30:
@@ -41,10 +42,13 @@ def analyze(text: str) -> dict:
     if mean > 26: add(10, f"Average sentence is long ({mean:.0f} words).")
     if hits: add(min(30, 8 * sum(hits.values())), "AI-typical wording: " + ", ".join(sorted(hits)))
     if starter_rep > 0.35: add(10, "Many sentences start with the same word.")
-    if contractions == 0 and len(sents) > 4: add(8, "No contractions; tone is stiff and impersonal.")
+    if not formal and contractions == 0 and len(sents) > 4: add(8, "No contractions; tone is stiff and impersonal.")
     if avg_word > 5.7: add(7, f"Long average word length ({avg_word:.1f}).")
     if ttr < 0.45 and len(words) > 150: add(5, "Low vocabulary variety.")
-    return {"score": min(100, round(score)), "words": len(words), "sentences": len(sents),
+    found = patterns.scan(text)
+    for f in found:
+        if f["strong"]: add(8, f"Pattern: {f['name']} ({f['count']}x). {f['fix']}")
+    return {"patterns": found, "score": min(100, round(score)), "words": len(words), "sentences": len(sents),
             "metrics": {"burstiness": round(cv, 2), "avg_sentence_len": round(mean, 1),
                         "type_token_ratio": round(ttr, 2), "ai_phrases": hits},
             "signals": signals}
